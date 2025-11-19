@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\user;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -33,7 +33,6 @@ class UserController extends Controller
     public function store(Request $request)
     {
         //dd($request->all());
-
         $data['name'] = $request->name;
         $data['email'] = $request->email;
         $data['password'] = $request->password;
@@ -81,5 +80,25 @@ class UserController extends Controller
         $user =  user::findOrFail($id);
         $user->delete();
         return redirect()->route('user.index')->with('success', 'Data berhasil dihapus');
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->with('error', 'Email tidak ditemukan.');
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->with('error', 'Password salah.');
+        }
+        session(['user_id' => $user->id]);
+        return redirect()->route('dashboard');
     }
 }
